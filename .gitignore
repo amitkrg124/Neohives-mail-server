@@ -1,0 +1,48 @@
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+.env
+.venv/
+env/
+venv/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# IDEs and Editors
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Testing
+coverage/
+*.cover
+*.lcov
+
+# Misc
+*.bak
+*.tmp
+*.swp
