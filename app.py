@@ -3,6 +3,7 @@ from flask_mail import Mail, Message
 import logging
 from datetime import datetime
 from flask_cors import CORS
+
 from dotenv import load_dotenv
 import os  # This is the missing import
 # Load environment variables from .env file
@@ -17,6 +18,7 @@ CORS(app)
 
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
 # Email configuration
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -85,6 +87,7 @@ Neohives Automated Mailer
         confirmation_sent = True
         if recipient and recipient != DEFAULT_RECIPIENT:
             confirmation_content = f"""
+
 Hello from Neohives,
 
 We have received your request and it has been processed successfully.
@@ -164,3 +167,4 @@ if __name__ == '__main__':
 
 # app = Flask(__name__)
 # CORS(app ,origins=["http://localhost:5000", "https://neohives-mail-server.onrender.com"]) 
+
