@@ -191,4 +191,13 @@ Example with Gunicorn:
 ```bash
 pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
-``` 
+```
+
+## Business Email Template
+
+This project now uses a professional business HTML email template for all outgoing emails. The default company information is set to:
+- Company Name: NeoHives IT Solutions
+- Email: contact@neohives.com
+- Website: www.neohives.com
+
+You can further customize the template at `templates/business_email_template.html`. 

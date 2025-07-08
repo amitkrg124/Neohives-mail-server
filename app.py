@@ -17,7 +17,6 @@ CORS(app)
 
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
 # Email configuration
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -62,11 +61,21 @@ def webhook():
         recipient = request.form.get('recipient', DEFAULT_RECIPIENT)
         subject = request.form.get('subject', 'Notification')
 
-        # Prepare email content for main notification
+        # Prepare email content for main notification (admin)
         email_content = f"""
-Web Hook Details
+Neohives Notification - Webhook Alert
 
-Content: {content}
+Dear Admin,
+
+You have received a new webhook notification from the Neohives system.
+
+Content:
+{content}
+
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Best regards,
+Neohives Automated Mailer
         """.strip()
 
         # Send main notification to DEFAULT_RECIPIENT
@@ -76,13 +85,19 @@ Content: {content}
         confirmation_sent = True
         if recipient and recipient != DEFAULT_RECIPIENT:
             confirmation_content = f"""
-Hello,
+Hello from Neohives,
 
-Your request has been received and processed.
+We have received your request and it has been processed successfully.
 
-Content: {content}
+Content:
+{content}
 
-Thank you.
+If you have any questions, feel free to contact our support team.
+
+Thank you for choosing Neohives!
+
+Best regards,
+Neohives Team
             """.strip()
             confirmation_sent = send_email(recipient, "Confirmation: " + subject, confirmation_content)
 
