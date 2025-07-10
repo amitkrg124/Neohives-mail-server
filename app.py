@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, jsonify, flash, redirect, url
 from flask_mail import Mail, Message
 import logging
 from datetime import datetime
+from flask_cors import CORS
+
 from dotenv import load_dotenv
 import os  # This is the missing import
 # Load environment variables from .env file
@@ -12,6 +14,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)
+
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Email configuration
@@ -58,11 +63,21 @@ def webhook():
         recipient = request.form.get('recipient', DEFAULT_RECIPIENT)
         subject = request.form.get('subject', 'Notification')
 
-        # Prepare email content for main notification
+        # Prepare email content for main notification (admin)
         email_content = f"""
-Web Hook Details
+Neohives Notification - Webhook Alert
 
-Content: {content}
+Dear Admin,
+
+You have received a new webhook notification from the Neohives system.
+
+Content:
+{content}
+
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Best regards,
+Neohives Automated Mailer
         """.strip()
 
         # Send main notification to DEFAULT_RECIPIENT
@@ -72,13 +87,20 @@ Content: {content}
         confirmation_sent = True
         if recipient and recipient != DEFAULT_RECIPIENT:
             confirmation_content = f"""
-Hello,
 
-Your request has been received and processed.
+Hello from Neohives,
 
-Content: {content}
+We have received your request and it has been processed successfully.
 
-Thank you.
+Content:
+{content}
+
+If you have any questions, feel free to contact our support team.
+
+Thank you for choosing Neohives!
+
+Best regards,
+Neohives Team
             """.strip()
             confirmation_sent = send_email(recipient, "Confirmation: " + subject, confirmation_content)
 
@@ -142,3 +164,7 @@ def status():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# app = Flask(__name__)
+# CORS(app ,origins=["http://localhost:5000", "https://neohives-mail-server.onrender.com"]) 
+
