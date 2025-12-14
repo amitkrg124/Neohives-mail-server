@@ -3,10 +3,11 @@ from flask_mail import Mail, Message
 import logging
 from datetime import datetime
 from flask_cors import CORS
+import threading
 
 from dotenv import load_dotenv
 import os  # This is the missing import
-# Load environment variables from .env file
+# Load environment variables from .en v file
 load_dotenv()
 
 # Configure logging
@@ -32,23 +33,41 @@ DEFAULT_RECIPIENT = os.getenv('DEFAULT_RECIPIENT')
 # Initialize Flask-Mail
 mail = Mail(app)
 
+def send_async_email(app, msg):
+    """Send email asynchronously within the application context."""
+    with app.app_context():
+        try:
+            mail.send(msg)
+            logger.info(f"Email sent successfully to {msg.recipients}")
+        except Exception as e:
+            logger.error(f"Failed to send email: {str(e)}")
+
 def send_email(recipient, subject, content):
-    """Send email."""
+    """Prepare and send email in a background thread."""
     try:
+        # Validate inputs
+        if not recipient:
+            return False, "Recipient is missing"
+        if not app.config['MAIL_USERNAME']:
+            return False, "MAIL_USERNAME config is missing"
+
         msg = Message(
             subject=subject,
             sender=app.config['MAIL_USERNAME'],
             recipients=[recipient]
         )
-        
         msg.body = content
         
-        mail.send(msg)
-        logger.info(f"Email sent successfully to {recipient}")
-        return True
+        # Send in a separate thread so the request doesn't block
+        thread = threading.Thread(target=send_async_email, args=(app, msg))
+        thread.start()
+        
+        # Return True immediately as we are processing in background
+        return True, None
     except Exception as e:
-        logger.error(f"Failed to send email: {str(e)}")
-        return False
+        error_msg = str(e)
+        logger.error(f"Failed to prepare email thread: {error_msg}")
+        return False, error_msg
 
 @app.route('/')
 def index():
@@ -81,13 +100,13 @@ Neohives Automated Mailer
         """.strip()
 
         # Send main notification to DEFAULT_RECIPIENT
-        main_sent = send_email(DEFAULT_RECIPIENT, subject, email_content)
+        main_sent, main_error = send_email(DEFAULT_RECIPIENT, subject, email_content)
 
         # Send confirmation to recipient if different from DEFAULT_RECIPIENT
         confirmation_sent = True
+        conf_error = None
         if recipient and recipient != DEFAULT_RECIPIENT:
             confirmation_content = f"""
-
 Hello from Neohives,
 
 We have received your request and it has been processed successfully.
@@ -102,7 +121,7 @@ Thank you for choosing Neohives!
 Best regards,
 Neohives Team
             """.strip()
-            confirmation_sent = send_email(recipient, "Confirmation: " + subject, confirmation_content)
+            confirmation_sent, conf_error = send_email(recipient, "Confirmation: " + subject, confirmation_content)
 
         if main_sent and confirmation_sent:
             return jsonify({
@@ -112,7 +131,10 @@ Neohives Team
                 'default_recipient': DEFAULT_RECIPIENT
             }), 200
         else:
-            return jsonify({'error': 'Failed to send one or more emails'}), 500
+            errors = []
+            if main_error: errors.append(f"Main email error: {main_error}")
+            if conf_error: errors.append(f"Confirmation email error: {conf_error}")
+            return jsonify({'error': 'Failed to send one or more emails', 'details': errors}), 500
 
     except Exception as e:
         logger.error(f"Webhook error: {str(e)}")
@@ -139,10 +161,11 @@ This is an automated notification from the system.
             """.strip()
             
             # Send email
-            if send_email(recipient, subject, email_content):
+            success, error = send_email(recipient, subject, email_content)
+            if success:
                 flash('Email sent successfully!', 'success')
             else:
-                flash('Failed to send email', 'warning')
+                flash(f'Failed to send email: {error}', 'warning')
             
             return redirect(url_for('send'))
                 
